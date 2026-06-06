@@ -2,28 +2,32 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>贪吃蛇小游戏</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             font-family: 'Arial', sans-serif;
+            touch-action: none;
+            overflow: hidden;
         }
 
         .game-container {
             text-align: center;
             background: rgba(255, 255, 255, 0.1);
-            padding: 30px;
+            padding: 20px;
             border-radius: 20px;
             backdrop-filter: blur(10px);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
@@ -31,7 +35,8 @@
 
         h1 {
             color: white;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
+            font-size: 24px;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
         }
 
@@ -40,19 +45,20 @@
             border-radius: 10px;
             background-color: #1a1a2e;
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+            max-width: 100%;
         }
 
         .score-board {
             color: white;
-            font-size: 24px;
-            margin: 20px 0;
+            font-size: 18px;
+            margin: 15px 0;
             text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
         }
 
-        .controls {
+        .controls-info {
             color: white;
-            margin-top: 15px;
-            font-size: 14px;
+            margin-top: 10px;
+            font-size: 12px;
             opacity: 0.9;
         }
 
@@ -80,10 +86,63 @@
 
         .game-over {
             color: #ff6b6b;
-            font-size: 28px;
+            font-size: 24px;
             font-weight: bold;
             margin: 15px 0;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        /* 方向控制按钮 */
+        .direction-pad {
+            display: grid;
+            grid-template-columns: repeat(3, 60px);
+            grid-template-rows: repeat(2, 60px);
+            gap: 8px;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .dir-btn {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #4ecca3 0%, #45b393 100%);
+            border: none;
+            border-radius: 15px;
+            font-size: 28px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            transition: transform 0.1s, box-shadow 0.1s;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .dir-btn:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        .dir-up {
+            grid-column: 2;
+            grid-row: 1;
+        }
+
+        .dir-left {
+            grid-column: 1;
+            grid-row: 2;
+        }
+
+        .dir-down {
+            grid-column: 2;
+            grid-row: 2;
+        }
+
+        .dir-right {
+            grid-column: 3;
+            grid-row: 2;
         }
     </style>
 </head>
@@ -93,11 +152,20 @@
         <div class="score-board">
             得分：<span id="score">0</span> | 最高分：<span id="highScore">0</span>
         </div>
-        <canvas id="gameCanvas" width="400" height="400"></canvas>
+        <canvas id="gameCanvas" width="300" height="533"></canvas>
         <div id="message" class="game-over"></div>
         <button onclick="startGame()">开始游戏</button>
-        <div class="controls">
-            使用方向键 ↑ ↓ ← → 或 W A S D 控制移动
+        
+        <!-- 方向控制按钮 -->
+        <div class="direction-pad">
+            <button class="dir-btn dir-up" ontouchstart="changeDirection('up')" onmousedown="changeDirection('up')">⬆️</button>
+            <button class="dir-btn dir-left" ontouchstart="changeDirection('left')" onmousedown="changeDirection('left')">⬅️</button>
+            <button class="dir-btn dir-down" ontouchstart="changeDirection('down')" onmousedown="changeDirection('down')">⬇️</button>
+            <button class="dir-btn dir-right" ontouchstart="changeDirection('right')" onmousedown="changeDirection('right')">➡️</button>
+        </div>
+        
+        <div class="controls-info">
+            使用方向键或下方按钮控制
         </div>
     </div>
 
@@ -146,11 +214,11 @@
 
         function drawGame() {
             // Clear canvas
-            ctx.fillStyle = '#1a1a2e';
+            ctx.fillStyle = '#ffcccc';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             // Draw grid
-            ctx.strokeStyle = '#2a2a3e';
+            ctx.strokeStyle = '#ff9999';
             ctx.lineWidth = 0.5;
             for (let i = 0; i <= tileCount; i++) {
                 ctx.beginPath();
@@ -325,6 +393,34 @@
                     break;
             }
         });
+
+        // Touch/Mouse direction controls
+        function changeDirection(dir) {
+            if (!isGameRunning) return;
+            
+            switch(dir) {
+                case 'up':
+                    if (direction.y !== 1) {
+                        nextDirection = { x: 0, y: -1 };
+                    }
+                    break;
+                case 'down':
+                    if (direction.y !== -1) {
+                        nextDirection = { x: 0, y: 1 };
+                    }
+                    break;
+                case 'left':
+                    if (direction.x !== 1) {
+                        nextDirection = { x: -1, y: 0 };
+                    }
+                    break;
+                case 'right':
+                    if (direction.x !== -1) {
+                        nextDirection = { x: 1, y: 0 };
+                    }
+                    break;
+            }
+        }
 
         // Initial draw
         initGame();
