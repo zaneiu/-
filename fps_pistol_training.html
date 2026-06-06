@@ -114,39 +114,62 @@
         sun.position.set(30,40,20); sun.castShadow = true;
         sun.shadow.mapSize.set(2048,2048); scene.add(sun);
 
-        // 地面
-        const ground = new Mesh(new PlaneGeometry(80,80), new MeshStandardMaterial({color:'#7a8c6e',roughness:0.85}));
+        // 地面 - 大平原
+        const groundSize = 800;
+        const ground = new Mesh(new PlaneGeometry(groundSize, groundSize), new MeshStandardMaterial({color:'#6b8c5e', roughness:0.9}));
         ground.rotation.x = -Math.PI/2; ground.position.y = -0.05; ground.receiveShadow = true; ground.name='ground';
-        scene.add(ground); scene.add(new PolarGridHelper(38,40,20,128,'#5a6b50','#5a6b50'));
-
-        // 墙壁
-        const wallMat = new MeshStandardMaterial({color:'#b8a89a',roughness:0.6,metalness:0.1});
-        const arenaSize = 36, wallH = 3, wallT = 0.4;
-        function createWall(w,h,d,x,y,z){
-            const g = new BoxGeometry(w,h,d); const wl = new Mesh(g,wallMat);
-            wl.position.set(x,y,z); wl.castShadow = wl.receiveShadow = true; wl.name='wall'; wl.userData={w,h,d};
-            scene.add(wl);
-            const trim = new Mesh(new BoxGeometry(w+0.15,0.12,d+0.15), new MeshStandardMaterial({color:'#d4c5b5',roughness:0.3}));
-            trim.position.copy(wl.position); trim.position.y += h/2+0.06; trim.castShadow = true; scene.add(trim);
-            return wl;
+        scene.add(ground);
+        
+        // 添加一些草地细节
+        const grassGeo = new PlaneGeometry(2, 3);
+        const grassMat = new MeshStandardMaterial({color:'#5a7a4e', side: THREE.DoubleSide, transparent:true, opacity:0.8});
+        for(let i=0; i<300; i++) {
+            const grass = new Mesh(grassGeo, grassMat);
+            const x = (Math.random() - 0.5) * groundSize * 0.9;
+            const z = (Math.random() - 0.5) * groundSize * 0.9;
+            if(Math.abs(x) > 10 || Math.abs(z) > 10) { // 不在出生点附近
+                grass.position.set(x, 0, z);
+                grass.rotation.z = (Math.random() - 0.5) * 0.5;
+                grass.rotation.y = Math.random() * Math.PI;
+                grass.scale.setScalar(0.5 + Math.random());
+                scene.add(grass);
+            }
         }
-        const walls = [];
-        walls.push(createWall(arenaSize+wallT*2, wallH, wallT, 0, wallH/2, -arenaSize/2));
-        walls.push(createWall(arenaSize+wallT*2, wallH, wallT, 0, wallH/2, arenaSize/2));
-        walls.push(createWall(wallT, wallH, arenaSize, -arenaSize/2, wallH/2, 0));
-        walls.push(createWall(wallT, wallH, arenaSize, arenaSize/2, wallH/2, 0));
 
-        // 障碍物
+        // 远处的山脉/地形轮廓
+        function createMountain(x, z, scale, height) {
+            const geo = new CylinderGeometry(0, scale * 15, height, 5);
+            const mat = new MeshStandardMaterial({color:'#5a6b50', roughness:1, flatShading:true});
+            const mesh = new Mesh(geo, mat);
+            mesh.position.set(x, height/2 - 5, z);
+            mesh.castShadow = false;
+            mesh.receiveShadow = false;
+            scene.add(mesh);
+        }
+        for(let i=0; i<20; i++) {
+            const angle = (i / 20) * Math.PI * 2;
+            const dist = groundSize * 0.45;
+            createMountain(Math.cos(angle) * dist, Math.sin(angle) * dist, 1 + Math.random(), 40 + Math.random() * 40);
+        }
+
+        // 障碍物 - 稀疏分布的掩体
         const obstacles = [];
-        const obsData = [
-            [5,0.75,3,2,1.5,2,'#d4a574'], [-6,1,-4,2.5,2,2.5,'#c4956a'], [8,0.6,-7,1.5,1.2,3,'#b8855f'],
-            [-8,0.5,6,3,1,1.5,'#d4a574'], [0,0.8,-10,2,1.6,2,'#c4956a'], [-3,1.1,8,2,2.2,2,'#b8855f'],
-            [10,0.55,10,1.8,1.1,1.8,'#d4a574'], [-10,0.7,-9,2.2,1.4,2.2,'#c4956a'],
-            [3,0.9,-5,1.5,1.8,1.5,'#b8855f'], [-5,0.65,1,3.5,1.3,1,'#d4a574'],
-            [12,0.5,-3,1,1,4,'#c4956a'], [-12,0.5,3,1,1,4,'#b8855f'],
-            [7,1,9,2,2,2,'#d4a574'], [-7,0.75,-10,2.5,1.5,1.5,'#c4956a'],
-            [0,0.4,13,5,0.8,1.5,'#9b7b6b']
-        ];
+        const obsData = [];
+        // 生成一些随机掩体
+        for(let i=0; i<15; i++) {
+            const x = (Math.random() - 0.5) * 300;
+            const z = (Math.random() - 0.5) * 300;
+            if(Math.abs(x) < 20 && Math.abs(z) < 20) continue; // 避开出生点
+            const w = 3 + Math.random() * 5;
+            const h = 1 + Math.random() * 2;
+            const d = 3 + Math.random() * 5;
+            const type = Math.random();
+            let color = '#8b7355';
+            if(type > 0.6) color = '#6b7c5e'; // 草绿色箱子
+            if(type > 0.8) color = '#5a5a5a'; // 金属箱
+            obsData.push([x, h/2, z, w, h, d, color]);
+        }
+        
         obsData.forEach(d => {
             const geo = new BoxGeometry(d[3],d[4],d[5]);
             const m = new Mesh(geo, new MeshStandardMaterial({color:d[6],roughness:0.7}));
@@ -154,11 +177,16 @@
             m.name='obstacle'; m.userData = { halfSize: new Vector3(d[3]/2, d[4]/2, d[5]/2) };
             scene.add(m); obstacles.push(m);
         });
-        [[4,0.6,-8],[-9,0.6,5],[11,0.6,7],[-4,0.6,-11],[6,0.6,11],[-11,0.6,-6]].forEach(p => {
-            const b = new Mesh(new CylinderGeometry(0.5,0.55,1.2,16), new MeshStandardMaterial({color:'#5a4a3a',roughness:0.5}));
-            b.position.set(...p); b.castShadow = b.receiveShadow = true; b.name='obstacle';
-            b.userData = { halfSize: new Vector3(0.55,0.6,0.55) }; scene.add(b); obstacles.push(b);
-        });
+        
+        // 添加一些圆柱形掩体
+        for(let i=0; i<8; i++) {
+            const x = (Math.random() - 0.5) * 200;
+            const z = (Math.random() - 0.5) * 200;
+            if(Math.abs(x) < 15 && Math.abs(z) < 15) continue;
+            const b = new Mesh(new CylinderGeometry(1.5, 1.8, 2.5, 16), new MeshStandardMaterial({color:'#6b5a4a',roughness:0.6}));
+            b.position.set(x, 1.25, z); b.castShadow = b.receiveShadow = true; b.name='obstacle';
+            b.userData = { halfSize: new Vector3(1.8, 1.25, 1.8) }; scene.add(b); obstacles.push(b);
+        }
 
         // ==================== 高级手枪模型 ====================
         const gunGroup = new Group();
@@ -349,13 +377,24 @@
         }
 
         function getRandomSpawnPosition() {
-            const margin=2, range=arenaSize/2-margin;
-            for(let i=0;i<30;i++){ const p=new Vector3((Math.random()-0.5)*range*2,0.6,(Math.random()-0.5)*range*2); if(!isPositionInObstacle(p,0.8)) return p; }
-            return new Vector3(0,1,0);
+            const range = 250;
+            for(let i=0;i<30;i++){ 
+                const p=new Vector3((Math.random()-0.5)*range*2, 0.6, (Math.random()-0.5)*range*2); 
+                if(Math.abs(p.x) < 15 && Math.abs(p.z) < 15) continue; // 避开出生点
+                if(!isPositionInObstacle(p,0.8)) return p; 
+            }
+            return new Vector3(50, 0.6, 50);
         }
         function isPositionInObstacle(pos, r){
-            for(const o of obstacles){ const h=o.userData.halfSize; if(!h) continue; if(pos.x>o.position.x-h.x-r&&pos.x<o.position.x+h.x+r&&pos.z>o.position.z-h.z-r&&pos.z<o.position.z+h.z+r&&pos.y>o.position.y-h.y&&pos.y<o.position.y+h.y+r) return true; }
-            const wl=arenaSize/2-r; return Math.abs(pos.x)>wl||Math.abs(pos.z)>wl;
+            for(const o of obstacles){ 
+                const h=o.userData.halfSize; 
+                if(!h) continue; 
+                if(pos.x>o.position.x-h.x-r && pos.x<o.position.x+h.x+r && 
+                   pos.z>o.position.z-h.z-r && pos.z<o.position.z+h.z+r && 
+                   pos.y>o.position.y-h.y && pos.y<o.position.y+h.y+r) 
+                    return true; 
+            }
+            return false;
         }
         function respawnEnemy(e){ const p=getRandomSpawnPosition(); e.mesh.position.copy(p); e.mesh.scale.set(0.01,0.01,0.01); e.spawnAnim=0; e.alive=true; e.velocity.set((Math.random()-0.5)*4,0,(Math.random()-0.5)*4); e.moveTimer=Math.random()*2; e.mesh.visible=true; e.mesh.userData.isEnemy=true; }
 
@@ -431,8 +470,15 @@
         function addKillFeed(msg){ const d=document.createElement('div'); d.className='kill-msg'; d.textContent=msg; killFeed.appendChild(d); setTimeout(()=>d.remove(),1600); }
         function updateHUD(){ ammoCurrentEl.textContent = state.isReloading?'...':state.ammo; ammoDisplay.classList.toggle('low-ammo', state.ammo<=8&&!state.isReloading); scoreValueEl.textContent = state.score; }
         function checkPlayerCollision(pos){
-            const r=0.35, wl=arenaSize/2-r; if(Math.abs(pos.x)>wl||Math.abs(pos.z)>wl) return true;
-            for(const o of obstacles){ const h=o.userData.halfSize; if(!h) continue; if(pos.x>o.position.x-h.x-r&&pos.x<o.position.x+h.x+r&&pos.z>o.position.z-h.z-r&&pos.z<o.position.z+h.z+r&&pos.y>o.position.y-h.y&&pos.y<o.position.y+h.y+0.3) return true; }
+            const r=0.35; 
+            for(const o of obstacles){ 
+                const h=o.userData.halfSize; 
+                if(!h) continue; 
+                if(pos.x>o.position.x-h.x-r && pos.x<o.position.x+h.x+r && 
+                   pos.z>o.position.z-h.z-r && pos.z<o.position.z+h.z+r && 
+                   pos.y>o.position.y-h.y && pos.y<o.position.y+h.y+0.3) 
+                    return true; 
+            }
             return false;
         }
 
@@ -470,7 +516,7 @@
                 if(camera.position.y<=state.playerHeight){ camera.position.y=state.playerHeight; state.verticalSpeed=0; state.isJumping=false; }
             }
 
-            const limit=arenaSize/2-1.2;
+            const limit = 280;
             enemies.forEach(e=>{
                 if(!e.alive){ if(e.spawnAnim<1){ e.spawnAnim+=dt*4; e.mesh.scale.setScalar(Math.min(1,e.spawnAnim)); } return; }
                 e.moveTimer-=dt;
