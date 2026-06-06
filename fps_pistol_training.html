@@ -188,18 +188,18 @@
             b.userData = { halfSize: new Vector3(1.8, 1.25, 1.8) }; scene.add(b); obstacles.push(b);
         }
 
-        // ==================== 高级手枪模型 ====================
+        // ==================== 高级手枪模型 (高可见度版) ====================
         const gunGroup = new Group();
         camera.add(gunGroup);
-        // 初始位置：右下角
-        gunGroup.position.set(0.25, -0.25, -0.5); 
+        // 初始位置：右下角，调大偏移量确保在视野内
+        gunGroup.position.set(0.35, -0.15, -0.35); 
         gunGroup.rotation.set(0, 0, 0);
 
-        // 材质定义
-        const matSlideDark = new MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.3, metalness: 0.9 }); // 黑色金属滑套
-        const matFrameGrey = new MeshStandardMaterial({ color: 0x333333, roughness: 0.6, metalness: 0.4 }); // 深灰聚合物框架
-        const matGripBlack = new MeshStandardMaterial({ color: 0x111111, roughness: 0.8, metalness: 0.1 }); // 橡胶握把
-        const matMetalSilver = new MeshStandardMaterial({ color: 0x888888, roughness: 0.4, metalness: 0.8 }); // 银色金属件
+        // 材质定义 - 高对比度配色
+        const matSlideDark = new MeshStandardMaterial({ color: 0x222222, roughness: 0.2, metalness: 0.95 }); // 深灰金属滑套
+        const matFrameGrey = new MeshStandardMaterial({ color: 0x444444, roughness: 0.5, metalness: 0.6 }); // 中灰聚合物框架
+        const matGripBlack = new MeshStandardMaterial({ color: 0x111111, roughness: 0.7, metalness: 0.2 }); // 橡胶握把
+        const matMetalSilver = new MeshStandardMaterial({ color: 0xeeeeee, roughness: 0.1, metalness: 1.0 }); // 亮银色金属件
 
         // --- 1. 滑套 (Slide) ---
         const slideGroup = new Group();
