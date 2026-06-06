@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>喵时光猫咪咖啡馆</title>
+    <style>
+        /* ==================== 全局样式 ==================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            line-height: 1.6;
+            color: #4a4a4a;
+            background-color: #f9f7f5;
+            overflow-x: hidden;
+        }
+
+        /* 莫兰迪色系配色 */
+        :root {
+            --primary-color: #b8a99a;      /* 莫兰迪棕 */
+            --secondary-color: #c9b8a8;    /* 浅棕色 */
+            --accent-color: #a8b8a9;       /* 莫兰迪绿 */
+            --text-dark: #4a4a4a;          /* 深灰文字 */
+            --text-light: #8c8c8c;         /* 浅灰文字 */
+            --bg-warm: #f9f7f5;            /* 暖白背景 */
+            --card-bg: #ffffff;            /* 卡片白 */
+        }
+
+        /* ==================== 导航栏 ==================== */
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-dark);
+            font-weight: 500;
+            transition: color 0.3s ease;
+            position: relative;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary-color);
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background-color: var(--primary-color);
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        /* 手机端菜单按钮 */
+        .menu-toggle {
+            display: none;
+            flex-direction: column;
+            cursor: pointer;
+            gap: 5px;
+        }
+
+        .menu-toggle span {
+            width: 25px;
+            height: 3px;
+            background-color: var(--text-dark);
+            transition: all 0.3s ease;
+        }
+
+        /* ==================== Banner 全屏大图 ==================== */
+        .banner {
+            height: 100vh;
+            background: linear-gradient(135deg, rgba(184, 169, 154, 0.3), rgba(168, 184, 169, 0.3)),
+                        url('https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=1920&q=80');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            position: relative;
+        }
+
+        .banner-content {
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 1s ease forwards 0.5s;
+        }
+
+        .banner h1 {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            letter-spacing: 3px;
+        }
+
+        .banner p {
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+            font-weight: 300;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 1rem 2.5rem;
+            background-color: var(--primary-color);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(184, 169, 154, 0.4);
+        }
+
+        .btn:hover {
+            background-color: var(--accent-color);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(168, 184, 169, 0.5);
+        }
+
+        /* ==================== 关于我们 ==================== */
+        .about {
+            padding: 6rem 5%;
+            background-color: var(--bg-warm);
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            color: var(--text-dark);
+            margin-bottom: 1rem;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease;
+        }
+
+        .section-title.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .section-subtitle {
+            text-align: center;
+            color: var(--text-light);
+            font-size: 1.1rem;
+            margin-bottom: 4rem;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease 0.2s;
+        }
+
+        .section-subtitle.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .about-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .about-image {
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            opacity: 0;
+            transform: translateX(-50px);
+            transition: all 0.8s ease;
+        }
+
+        .about-image.visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .about-image img {
+            width: 100%;
+            height: auto;
+            display: block;
+            transition: transform 0.5s ease;
+        }
+
+        .about-image:hover img {
+            transform: scale(1.05);
+        }
+
+        .about-text {
+            opacity: 0;
+            transform: translateX(50px);
+            transition: all 0.8s ease;
+        }
+
+        .about-text.visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .about-text h3 {
+            font-size: 2rem;
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+        }
+
+        .about-text p {
+            color: var(--text-dark);
+            margin-bottom: 1rem;
+            line-height: 1.8;
+        }
+
+        /* ==================== 特色卡片 ==================== */
+        .features {
+            padding: 6rem 5%;
+            background-color: #f5f1ed;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2.5rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .feature-card {
+            background-color: var(--card-bg);
+            padding: 2.5rem;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.4s ease;
+            opacity: 0;
+            transform: translateY(50px);
+        }
+
+        .feature-card.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* 鼠标悬停效果：放大 + 阴影增强 */
+        .feature-card:hover {
+            transform: translateY(-10px) scale(1.03);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .feature-icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            display: block;
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .feature-card p {
+            color: var(--text-light);
+            line-height: 1.7;
+        }
+
+        /* 为每个卡片设置不同的过渡延迟 */
+        .feature-card:nth-child(1) {
+            transition-delay: 0.1s;
+        }
+
+        .feature-card:nth-child(2) {
+            transition-delay: 0.2s;
+        }
+
+        .feature-card:nth-child(3) {
+            transition-delay: 0.3s;
+        }
+
+        /* ==================== 联系方式（底部） ==================== */
+        .contact {
+            padding: 6rem 5%;
+            background-color: var(--bg-warm);
+        }
+
+        .contact-content {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .contact-item {
+            text-align: center;
+            padding: 2rem;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease;
+        }
+
+        .contact-item.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .contact-item:nth-child(1) {
+            transition-delay: 0.1s;
+        }
+
+        .contact-item:nth-child(2) {
+            transition-delay: 0.2s;
+        }
+
+        .contact-item:nth-child(3) {
+            transition-delay: 0.3s;
+        }
+
+        .contact-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .contact-item h4 {
+            font-size: 1.3rem;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .contact-item p {
+            color: var(--text-light);
+        }
+
+        /* 底部版权信息 */
+        .footer {
+            background-color: var(--primary-color);
+            color: white;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .footer p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        /* ==================== 动画关键帧 ==================== */
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ==================== 响应式设计（手机端适配） ==================== */
+        @media (max-width: 768px) {
+            /* 导航栏适配手机 */
+            .nav-links {
+                position: fixed;
+                top: 70px;
+                left: -100%;
+                width: 100%;
+                height: calc(100vh - 70px);
+                background-color: white;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 2rem;
+                transition: left 0.3s ease;
+            }
+
+            .nav-links.active {
+                left: 0;
+            }
+
+            .menu-toggle {
+                display: flex;
+            }
+
+            .menu-toggle.active span:nth-child(1) {
+                transform: rotate(45deg) translate(5px, 5px);
+            }
+
+            .menu-toggle.active span:nth-child(2) {
+                opacity: 0;
+            }
+
+            .menu-toggle.active span:nth-child(3) {
+                transform: rotate(-45deg) translate(7px, -6px);
+            }
+
+            /* Banner 适配手机 */
+            .banner h1 {
+                font-size: 2.5rem;
+            }
+
+            .banner p {
+                font-size: 1.2rem;
+            }
+
+            /* 关于我们适配手机 */
+            .about-content {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            .about-image {
+                order: -1;
+            }
+
+            /* 特色卡片适配手机 */
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            /* 联系方式适配手机 */
+            .contact-content {
+                grid-template-columns: 1fr;
+            }
+
+            /* 调整内边距 */
+            .about,
+            .features,
+            .contact {
+                padding: 4rem 5%;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+        }
+
+        /* 小屏幕手机进一步优化 */
+        @media (max-width: 480px) {
+            .banner h1 {
+                font-size: 2rem;
+            }
+
+            .banner p {
+                font-size: 1rem;
+            }
+
+            .btn {
+                padding: 0.8rem 2rem;
+                font-size: 0.9rem;
+            }
+
+            .feature-card {
+                padding: 2rem 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航栏 -->
+    <nav class="navbar">
+        <a href="#" class="logo">🐱 喵时光</a>
+        <ul class="nav-links">
+            <li><a href="#home">首页</a></li>
+            <li><a href="#about">关于我们</a></li>
+            <li><a href="#features">特色服务</a></li>
+            <li><a href="#contact">联系我们</a></li>
+        </ul>
+        <div class="menu-toggle">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </nav>
+
+    <!-- 全屏 Banner -->
+    <section class="banner" id="home">
+        <div class="banner-content">
+            <h1>喵时光猫咪咖啡馆</h1>
+            <p>与可爱的猫咪共度温馨时光</p>
+            <a href="#about" class="btn">探索更多</a>
+        </div>
+    </section>
+
+    <!-- 关于我们 -->
+    <section class="about" id="about">
+        <h2 class="section-title">关于我们</h2>
+        <p class="section-subtitle">一个充满爱与温暖的猫咪主题空间</p>
+        <div class="about-content">
+            <div class="about-image">
+                <img src="https://images.unsplash.com/photo-1573865526739-10659fec780d?w=800&q=80" alt="猫咪咖啡馆环境">
+            </div>
+            <div class="about-text">
+                <h3>我们的故事</h3>
+                <p>喵时光猫咪咖啡馆成立于 2020 年，是一个集咖啡、甜品与猫咪互动于一体的温馨空间。我们相信，每一只猫咪都是独特的小天使，它们能带给人们无尽的温暖与治愈。</p>
+                <p>在这里，您可以品尝到精心调制的手冲咖啡和手工甜品，同时与十几只性格各异的猫咪亲密互动。无论是独自前来放松，还是与朋友相聚，喵时光都能为您带来一段难忘的美好时光。</p>
+                <p>我们所有的猫咪都来自救助站，经过严格的健康检查和性格筛选。它们在这里得到了最好的照顾，也希望能为每一位客人带来快乐。</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 特色服务卡片 -->
+    <section class="features" id="features">
+        <h2 class="section-title">特色服务</h2>
+        <p class="section-subtitle">为您打造的独特体验</p>
+        <div class="features-grid">
+            <div class="feature-card">
+                <span class="feature-icon">☕</span>
+                <h3>精品咖啡</h3>
+                <p>精选全球优质咖啡豆，由经验丰富的咖啡师现场手冲，每一杯都蕴含着对品质的坚持与热爱。</p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">🍰</span>
+                <h3>手工甜品</h3>
+                <p>每日新鲜制作的手工甜品，低糖健康配方，让您在享受美味的同时无需担心负担。</p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">🐾</span>
+                <h3>猫咪互动</h3>
+                <p>与温顺可爱的猫咪们亲密接触，感受它们带来的治愈力量，释放压力，重拾内心的宁静。</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 联系方式 -->
+    <section class="contact" id="contact">
+        <h2 class="section-title">联系我们</h2>
+        <p class="section-subtitle">期待与您相遇</p>
+        <div class="contact-content">
+            <div class="contact-item">
+                <span class="contact-icon">📍</span>
+                <h4>地址</h4>
+                <p>北京市朝阳区<br>阳光路 88 号喵时光大厦</p>
+            </div>
+            <div class="contact-item">
+                <span class="contact-icon">📞</span>
+                <h4>电话</h4>
+                <p>010-8888-6666<br>138-0000-8888</p>
+            </div>
+            <div class="contact-item">
+                <span class="contact-icon">⏰</span>
+                <h4>营业时间</h4>
+                <p>周一至周日<br>10:00 - 22:00</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 底部版权 -->
+    <footer class="footer">
+        <p>&copy; 2024 喵时光猫咪咖啡馆。All Rights Reserved.</p>
+    </footer>
+
+    <script>
+        // ==================== 手机端菜单切换 ====================
+        const menuToggle = document.querySelector('.menu-toggle');
+        const navLinks = document.querySelector('.nav-links');
+
+        menuToggle.addEventListener('click', () => {
+            menuToggle.classList.toggle('active');
+            navLinks.classList.toggle('active');
+        });
+
+        // 点击导航链接后自动关闭菜单（手机端）
+        document.querySelectorAll('.nav-links a').forEach(link => {
+            link.addEventListener('click', () => {
+                menuToggle.classList.remove('active');
+                navLinks.classList.remove('active');
+            });
+        });
+
+        // ==================== 滚动淡入动画 ====================
+        // 使用 Intersection Observer API 实现元素进入视口时触发淡入动画
+        const observerOptions = {
+            threshold: 0.2,  // 当元素 20% 可见时触发
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    // 动画只触发一次，取消观察
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        // 观察所有需要淡入动画的元素
+        const animatedElements = document.querySelectorAll(
+            '.section-title, .section-subtitle, .about-image, .about-text, .feature-card, .contact-item'
+        );
+
+        animatedElements.forEach(el => {
+            observer.observe(el);
+        });
+
+        // ==================== 导航栏滚动效果 ====================
+        const navbar = document.querySelector('.navbar');
+        
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 100) {
+                navbar.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.1)';
+                navbar.style.padding = '0.8rem 5%';
+            } else {
+                navbar.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.05)';
+                navbar.style.padding = '1rem 5%';
+            }
+        });
+
+        // ==================== 平滑滚动 ====================
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                const targetElement = document.querySelector(targetId);
+                
+                if (targetElement) {
+                    const navbarHeight = navbar.offsetHeight;
+                    const targetPosition = targetElement.offsetTop - navbarHeight;
+                    
+                    window.scrollTo({
+                        top: targetPosition,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+
+        // ==================== 控制台欢迎信息 ====================
+        console.log('%c🐱 欢迎来到喵时光猫咪咖啡馆！', 'font-size: 20px; color: #b8a99a; font-weight: bold;');
+        console.log('%c如果您喜欢这个页面，欢迎来店做客~', 'font-size: 14px; color: #8c8c8c;');
+    </script>
+</body>
+</html>
